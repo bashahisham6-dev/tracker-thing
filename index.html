@@ -995,14 +995,22 @@ function renderParties(side) {
     list.innerHTML = '<div class="empty-state">No parties yet</div>';
     return;
   }
+  
+  // Calculate total for participation percentage
+  const totalSidePts = state[side + 'Events'].reduce((s,e) => s + e.pts, 0);
+  
   list.innerHTML = parties.map(p => {
     const pts = state[side + 'Events']
       .filter(e => e.party === p.name)
       .reduce((s,e) => s + e.pts, 0);
+    const participation = totalSidePts !== 0 ? Math.round((pts / totalSidePts) * 100) : 0;
     return `<div class="party-item">
       <div class="party-dot" style="background:${p.color}"></div>
       <span class="party-name">${p.name}</span>
-      <span class="party-pts-badge">${pts} pts</span>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <span class="party-pts-badge">${pts} pts</span>
+        <span class="party-pts-badge" style="background:rgba(150,180,100,0.1);border-color:#6b9a3a;color:#a8cc4b;">${participation}%</span>
+      </div>
       <span class="party-del" onclick="deleteParty('${side}','${p.name}')">✕</span>
     </div>`;
   }).join('');
