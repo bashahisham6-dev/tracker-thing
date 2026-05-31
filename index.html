@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>War Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg-darkest: #0a0c0a;
+    --bg-dark: #111410;
+    --bg-mid: #1a1e18;
+    --bg-panel: #1e2319;
+    --bg-row: #171b15;
+    --bg-row-alt: #1c2018;
+    --bg-row-hover: #242820;
+    --border-gold: #4a3f1a;
+    --border-bright: #6b5a25;
+    --gold: #c8a84b;
+    --gold-dim: #8a7232;
+    --red: #8b1a1a;
+    --red-bright: #c0392b;
+    --red-bar: #a83232;
+    --blue: #1a3a6b;
+    --blue-bright: #2980b9;
+    --blue-bar: #2a5a9b;
+    --green: #2a7a2a;
+    --text-main: #c8b87a;
+    --text-dim: #8a7a52;
+    --text-bright: #e8d4a0;
+    --text-white: #d8ccaa;
+    --skull: #cc4444;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg-darkest);
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background-image:
+      radial-gradient(ellipse at 50% 0%, rgba(100,80,20,0.08) 0%, transparent 60%),
+      repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+  }
+
+  .window {
+    width: 100%;
+    max-width: 1160px;
+    background: var(--bg-dark);
+    border: 2px solid var(--border-gold);
+    box-shadow: 0 0 0 1px #000, 0 0 40px rgba(0,0,0,0.9), inset 0 1px 0 rgba(200,168,75,0.15);
+    position: relative;
+  }
+
+  /* TITLE BAR */
+  .title-bar {
+    background: linear-gradient(180deg, #2a2318 0%, #1a1810 50%, #0e0c08 100%);
+    border-bottom: 2px solid var(--border-gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 40px;
+    position: relative;
+    min-height: 38px;
+  }
+  .title-bar::before, .title-bar::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 80px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-dim));
+  }
+  .title-bar::before { left: 50px; }
+  .title-bar::after { right: 50px; background: linear-gradient(270deg, transparent, var(--gold-dim)); }
+
+  .title-text {
+    font-family: 'Cinzel', serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(200,168,75,0.4);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .title-text:hover { color: var(--text-bright); }
+
+  .close-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    background: linear-gradient(180deg, #3a1a1a, #1a0a0a);
+    border: 1px solid #6b2a2a;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #cc4444;
+    font-size: 13px;
+    font-weight: bold;
+  }
+  .close-btn:hover { background: #3a0a0a; }
+
+  /* MANPOWER BAR */
+  .manpower-section {
+    background: linear-gradient(180deg, #161a14 0%, #0f1210 100%);
+    border-bottom: 1px solid var(--border-gold);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .manpower-stats {
+    min-width: 200px;
+  }
+  .manpower-stats.right { text-align: right; }
+  .manpower-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-bright);
+    letter-spacing: 0.5px;
+  }
+  .manpower-value { color: var(--text-bright); font-weight: 700; }
+  .losses-value { color: var(--skull); font-weight: 700; }
+
+  .progress-bar-wrapper {
+    flex: 1;
+    height: 22px;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    position: relative;
+    overflow: hidden;
+  }
+  .progress-bar-left {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      var(--red-bar),
+      var(--red-bar) 4px,
+      #7a2020 4px,
+      #7a2020 8px
+    );
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+  .progress-bar-right {
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      45deg,
+      var(--blue-bar),
+      var(--blue-bar) 4px,
+      #1a4070 4px,
+      #1a4070 8px
+    );
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* TABS */
+  .tabs-bar {
+    background: linear-gradient(180deg, #1a1e18 0%, #141810 100%);
+    border-bottom: 2px solid var(--border-gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 6px 10px;
+  }
+  .tab-btn {
+    background: linear-gradient(180deg, #252920 0%, #1a1e18 50%, #131610 100%);
+    border: 1px solid var(--border-gold);
+    color: var(--text-dim);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    cursor: pointer;
+    position: relative;
+    display: flex; align-items: center; gap: 6px;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .tab-btn::before, .tab-btn::after {
+    content: '»';
+    font-size: 11px;
+    color: var(--gold-dim);
+  }
+  .tab-btn::after { content: '«'; }
+  .tab-btn:hover { color: var(--text-bright); border-color: var(--border-bright); background: linear-gradient(180deg, #2e3328, #222618); }
+  .tab-btn.active {
+    color: var(--gold);
+    background: linear-gradient(180deg, #2e2a1a 0%, #1e1a10 100%);
+    border-color: var(--border-bright);
+    box-shadow: 0 0 8px rgba(200,168,75,0.2);
+  }
+
+  /* MAIN CONTENT */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* EVENTS TAB */
+  .sides-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    background: var(--bg-darkest);
+    min-height: 420px;
+  }
+
+  .side-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-gold);
+  }
+
+  .col-headers {
+    display: grid;
+    grid-template-columns: 1fr 60px 70px 60px 30px;
+    background: linear-gradient(180deg, #202418 0%, #161a12 100%);
+    border-bottom: 1px solid var(--border-gold);
+    padding: 4px 6px;
+    align-items: center;
+    gap: 2px;
+  }
+  .col-header {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: center;
+  }
+  .col-header.left { text-align: left; }
+
+  .events-list {
+    overflow-y: auto;
+    max-height: 380px;
+  }
+  .events-list::-webkit-scrollbar { width: 8px; }
+  .events-list::-webkit-scrollbar-track { background: #0a0c0a; }
+  .events-list::-webkit-scrollbar-thumb { background: var(--border-gold); }
+
+  .event-row {
+    display: grid;
+    grid-template-columns: 1fr 60px 70px 60px 30px;
+    align-items: center;
+    padding: 6px 6px;
+    gap: 2px;
+    border-bottom: 1px solid rgba(74,63,26,0.3);
+    cursor: default;
+    transition: background 0.1s;
+    min-height: 36px;
+  }
+  .event-row:hover { background: var(--bg-row-hover); }
+  .event-row:nth-child(odd) { background: var(--bg-row); }
+  .event-row:nth-child(even) { background: var(--bg-row-alt); }
+  .event-row:hover { background: var(--bg-row-hover) !important; }
+
+  .event-icon {
+    width: 20px; height: 20px;
+    background: var(--bg-mid);
+    border: 1px solid var(--border-gold);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+  .event-name-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow: hidden;
+  }
+  .event-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-bright);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+  }
+  .event-pts {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gold);
+    text-align: center;
+  }
+  .event-party {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .event-date {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: center;
+  }
+  .event-del {
+    color: var(--red-bright);
+    font-size: 14px;
+    text-align: center;
+    cursor: pointer;
+    padding: 2px 4px;
+    opacity: 0.6;
+  }
+  .event-del:hover { opacity: 1; }
+
+  .add-event-row {
+    padding: 8px;
+    background: linear-gradient(180deg, #161a12, #0f1210);
+    border-top: 1px solid var(--border-gold);
+  }
+  .add-event-row input, .add-event-row select {
+    background: #0e1209;
+    border: 1px solid var(--border-gold);
+    color: var(--text-bright);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    padding: 4px 6px;
+    outline: none;
+    width: 100%;
+  }
+  .add-event-row input:focus, .add-event-row select:focus { border-color: var(--border-bright); }
+  .add-event-row select option { background: #0e1209; }
+
+  .add-fields {
+    display: grid;
+    grid-template-columns: 1fr 70px 1fr;
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+  .add-btn {
+    width: 100%;
+    background: linear-gradient(180deg, #2a2418, #1a1810);
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 5px;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+  .add-btn:hover { background: linear-gradient(180deg, #3a3020, #2a2418); border-color: var(--gold); }
+
+  /* PARTIES TAB */
+  .parties-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    background: var(--bg-darkest);
+    min-height: 420px;
+  }
+  .party-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-gold);
+    padding: 8px;
+  }
+  .party-panel-title {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    color: var(--gold);
+    text-align: center;
+    padding: 6px;
+    background: linear-gradient(180deg, #252918, #161a12);
+    border: 1px solid var(--border-gold);
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+  }
+  .party-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  .party-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: var(--bg-row);
+    border: 1px solid rgba(74,63,26,0.4);
+    border-left: 3px solid var(--gold-dim);
+  }
+  .party-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .party-name { flex: 1; font-size: 13px; font-weight: 600; color: var(--text-bright); }
+  .party-pts-badge {
+    font-size: 11px;
+    color: var(--gold);
+    font-weight: 700;
+    background: rgba(200,168,75,0.1);
+    border: 1px solid var(--border-gold);
+    padding: 1px 5px;
+  }
+  .party-del {
+    color: var(--red-bright);
+    cursor: pointer;
+    font-size: 13px;
+    opacity: 0.6;
+  }
+  .party-del:hover { opacity: 1; }
+
+  .add-party-form {
+    margin-top: 8px;
+    display: flex;
+    gap: 4px;
+  }
+  .add-party-form input {
+    flex: 1;
+    background: #0e1209;
+    border: 1px solid var(--border-gold);
+    color: var(--text-bright);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    padding: 4px 6px;
+    outline: none;
+  }
+  .add-party-form input:focus { border-color: var(--border-bright); }
+
+  /* CODE TAB */
+  .code-tab {
+    padding: 16px;
+    background: var(--bg-panel);
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .code-label {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    text-align: center;
+    padding: 8px;
+    background: linear-gradient(180deg, #252918, #161a12);
+    border: 1px solid var(--border-gold);
+  }
+  .code-box {
+    background: #080a07;
+    border: 1px solid var(--border-gold);
+    color: #7ab87a;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    padding: 12px;
+    word-break: break-all;
+    line-height: 1.6;
+    flex: 1;
+    min-height: 200px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+  }
+  .code-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .code-import-area {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .code-import-area textarea {
+    background: #080a07;
+    border: 1px solid var(--border-gold);
+    color: var(--text-bright);
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    padding: 8px;
+    resize: vertical;
+    height: 80px;
+    outline: none;
+    width: 100%;
+  }
+
+  /* CUSTOMIZATION TAB */
+  .custom-tab {
+    padding: 16px;
+    background: var(--bg-panel);
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .custom-section {
+    background: var(--bg-row);
+    border: 1px solid var(--border-gold);
+    padding: 12px;
+  }
+  .custom-section-title {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border-gold);
+    padding-bottom: 6px;
+  }
+  .custom-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .custom-row label {
+    font-size: 12px;
+    color: var(--text-dim);
+    min-width: 120px;
+    font-weight: 600;
+  }
+  .custom-row input {
+    flex: 1;
+    background: #0e1209;
+    border: 1px solid var(--border-gold);
+    color: var(--text-bright);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    padding: 5px 8px;
+    outline: none;
+  }
+  .custom-row input:focus { border-color: var(--border-bright); }
+  .custom-apply-btn {
+    background: linear-gradient(180deg, #2a2418, #1a1810);
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 6px 16px;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+  .custom-apply-btn:hover { background: linear-gradient(180deg, #3a3020, #2a2418); border-color: var(--gold); }
+
+  .side-name-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg-dark);
+    border: 2px solid var(--border-gold);
+    padding: 20px;
+    min-width: 320px;
+    box-shadow: 0 0 40px rgba(0,0,0,0.9);
+  }
+  .modal-title {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+    text-align: center;
+  }
+  .modal input {
+    width: 100%;
+    background: #0e1209;
+    border: 1px solid var(--border-gold);
+    color: var(--text-bright);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    padding: 6px 8px;
+    outline: none;
+    margin-bottom: 8px;
+  }
+  .modal input:focus { border-color: var(--border-bright); }
+  .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
+
+  .scrollbar-track { width: 8px; }
+
+  /* ICON DECORATIONS */
+  .sword-icon { font-size: 14px; }
+
+  .empty-state {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 12px;
+    padding: 30px 16px;
+    font-style: italic;
+  }
+
+  .side-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(180deg, #1e2218 0%, #141810 100%);
+    border-bottom: 1px solid var(--border-gold);
+    padding: 6px 10px;
+  }
+  .side-header-name {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    color: var(--gold);
+    letter-spacing: 2px;
+  }
+  .side-total {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-bright);
+  }
+
+  .separator-chevron {
+    width: 2px;
+    background: var(--border-gold);
+  }
+
+  .notif {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--bg-dark);
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    padding: 8px 16px;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .notif.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="window" id="mainWindow">
+
+  <!-- TITLE BAR -->
+  <div class="title-bar">
+    <span class="title-text" id="titleDisplay" onclick="promptTitle()">British-American War</span>
+    <div class="close-btn" title="Close">✕</div>
+  </div>
+
+  <!-- MANPOWER / POINTS BAR -->
+  <div class="manpower-section">
+    <div class="manpower-stats">
+      <div class="manpower-label">
+        <span id="ptsLabelLeft">Points</span>: <span class="manpower-value" id="leftPtsDisplay">0</span>
+      </div>
+      <div class="manpower-label">
+        <span id="lossLabelLeft">Losses</span>: <span class="losses-value" id="leftLossDisplay">0</span>
+      </div>
+    </div>
+    <div class="progress-bar-wrapper">
+      <div class="progress-bar-left" id="barLeft" style="width:50%"></div>
+      <div class="progress-bar-right" id="barRight" style="width:50%"></div>
+    </div>
+    <div class="manpower-stats right">
+      <div class="manpower-label">
+        <span id="ptsLabelRight">Points</span>: <span class="manpower-value" id="rightPtsDisplay">0</span>
+      </div>
+      <div class="manpower-label">
+        <span id="lossLabelRight">Losses</span>: <span class="losses-value" id="rightLossDisplay">0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs-bar">
+    <button class="tab-btn active" onclick="switchTab('events')">Events</button>
+    <button class="tab-btn" onclick="switchTab('parties')">Parties</button>
+    <button class="tab-btn" onclick="switchTab('code')">Export Code</button>
+    <button class="tab-btn" onclick="switchTab('custom')">Customization</button>
+  </div>
+
+  <!-- EVENTS TAB -->
+  <div class="tab-content active" id="tab-events">
+    <div class="sides-grid">
+      <!-- LEFT SIDE -->
+      <div class="side-panel">
+        <div class="side-header">
+          <span class="side-header-name" id="leftSideName">Allied Forces</span>
+          <span class="side-total" id="leftSideTotal">0 pts</span>
+        </div>
+        <div class="col-headers">
+          <div class="col-header left">Event</div>
+          <div class="col-header" id="colPtsL">Pts</div>
+          <div class="col-header">Party</div>
+          <div class="col-header">Date</div>
+          <div class="col-header"></div>
+        </div>
+        <div class="events-list" id="leftEventsList"></div>
+        <div class="add-event-row">
+          <div class="add-fields">
+            <input type="text" id="leftEventName" placeholder="Event name...">
+            <input type="number" id="leftEventPts" placeholder="Pts" min="0">
+            <select id="leftEventParty"><option value="">— Party —</option></select>
+          </div>
+          <button class="add-btn" onclick="addEvent('left')">+ Add Event</button>
+        </div>
+      </div>
+
+      <!-- RIGHT SIDE -->
+      <div class="side-panel">
+        <div class="side-header">
+          <span class="side-header-name" id="rightSideName">Axis Powers</span>
+          <span class="side-total" id="rightSideTotal">0 pts</span>
+        </div>
+        <div class="col-headers">
+          <div class="col-header left">Event</div>
+          <div class="col-header" id="colPtsR">Pts</div>
+          <div class="col-header">Party</div>
+          <div class="col-header">Date</div>
+          <div class="col-header"></div>
+        </div>
+        <div class="events-list" id="rightEventsList"></div>
+        <div class="add-event-row">
+          <div class="add-fields">
+            <input type="text" id="rightEventName" placeholder="Event name...">
+            <input type="number" id="rightEventPts" placeholder="Pts" min="0">
+            <select id="rightEventParty"><option value="">— Party —</option></select>
+          </div>
+          <button class="add-btn" onclick="addEvent('right')">+ Add Event</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PARTIES TAB -->
+  <div class="tab-content" id="tab-parties">
+    <div class="parties-grid">
+      <div class="party-panel">
+        <div class="party-panel-title" id="leftPartyPanelTitle">LEFT SIDE PARTIES</div>
+        <div class="party-list" id="leftPartyList"></div>
+        <div class="add-party-form">
+          <input type="text" id="leftPartyInput" placeholder="Party name...">
+          <button class="add-btn" style="width:80px" onclick="addParty('left')">+ Add</button>
+        </div>
+      </div>
+      <div class="party-panel">
+        <div class="party-panel-title" id="rightPartyPanelTitle">RIGHT SIDE PARTIES</div>
+        <div class="party-list" id="rightPartyList"></div>
+        <div class="add-party-form">
+          <input type="text" id="rightPartyInput" placeholder="Party name...">
+          <button class="add-btn" style="width:80px" onclick="addParty('right')">+ Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CODE TAB -->
+  <div class="tab-content" id="tab-code">
+    <div class="code-tab">
+      <div class="code-label">⚔ EXPORT / IMPORT STATE CODE ⚔</div>
+      <div class="code-box" id="codeOutput">[ Click Generate to create your save code ]</div>
+      <div class="code-actions">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <button class="add-btn" onclick="generateCode()">↯ Generate Code</button>
+          <button class="add-btn" onclick="copyCode()">⎘ Copy to Clipboard</button>
+        </div>
+        <div class="code-import-area">
+          <textarea id="importInput" placeholder="Paste your save code here..."></textarea>
+          <button class="add-btn" onclick="importCode()">↩ Import Code</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOMIZATION TAB -->
+  <div class="tab-content" id="tab-custom">
+    <div class="custom-tab">
+      <div class="custom-section">
+        <div class="custom-section-title">War Title</div>
+        <div class="custom-row">
+          <label>War Name</label>
+          <input type="text" id="customTitle" placeholder="e.g. British-American War">
+          <button class="custom-apply-btn" onclick="applyTitle()">Apply</button>
+        </div>
+      </div>
+
+      <div class="custom-section">
+        <div class="custom-section-title">Side Names</div>
+        <div class="side-name-row">
+          <div class="custom-row">
+            <label>Left Side</label>
+            <input type="text" id="customLeftName" placeholder="e.g. Allied Forces">
+          </div>
+          <div class="custom-row">
+            <label>Right Side</label>
+            <input type="text" id="customRightName" placeholder="e.g. Axis Powers">
+          </div>
+        </div>
+        <button class="custom-apply-btn" onclick="applySideNames()">Apply Side Names</button>
+      </div>
+
+      <div class="custom-section">
+        <div class="custom-section-title">Label Names</div>
+        <div class="custom-row">
+          <label>"Points" Label</label>
+          <input type="text" id="customPtsLabel" placeholder="e.g. Points, Score, Kills">
+          <button class="custom-apply-btn" onclick="applyPtsLabel()">Apply</button>
+        </div>
+        <div class="custom-row">
+          <label>"Losses" Label</label>
+          <input type="text" id="customLossLabel" placeholder="e.g. Losses, Deficit, Behind">
+          <button class="custom-apply-btn" onclick="applyLossLabel()">Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif"></div>
+
+<script>
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let state = {
+  title: 'British-American War',
+  leftName: 'Allied Forces',
+  rightName: 'Axis Powers',
+  ptsLabel: 'Points',
+  lossLabel: 'Losses',
+  leftEvents: [],
+  rightEvents: [],
+  leftParties: [],
+  rightParties: [],
+};
+
+const PARTY_COLORS = [
+  '#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6',
+  '#1abc9c','#e67e22','#34495e','#e91e63','#00bcd4'
+];
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+function init() {
+  document.getElementById('titleDisplay').textContent = state.title;
+  document.getElementById('customTitle').value = state.title;
+  document.getElementById('customLeftName').value = state.leftName;
+  document.getElementById('customRightName').value = state.rightName;
+  document.getElementById('customPtsLabel').value = state.ptsLabel;
+  document.getElementById('customLossLabel').value = state.lossLabel;
+  renderAll();
+}
+
+// ─────────────────────────────────────────────
+//  TABS
+// ─────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  const tabs = ['events','parties','code','custom'];
+  document.querySelectorAll('.tab-btn')[tabs.indexOf(tab)].classList.add('active');
+  if (tab === 'code') generateCode();
+}
+
+// ─────────────────────────────────────────────
+//  RENDER ALL
+// ─────────────────────────────────────────────
+function renderAll() {
+  renderEvents('left');
+  renderEvents('right');
+  renderParties('left');
+  renderParties('right');
+  updatePartySelects();
+  updateBar();
+  updateLabels();
+}
+
+function updateLabels() {
+  const pl = state.ptsLabel;
+  const ll = state.lossLabel;
+  document.getElementById('ptsLabelLeft').textContent = pl;
+  document.getElementById('ptsLabelRight').textContent = pl;
+  document.getElementById('lossLabelLeft').textContent = ll;
+  document.getElementById('lossLabelRight').textContent = ll;
+  document.getElementById('colPtsL').textContent = 'Pts';
+  document.getElementById('colPtsR').textContent = 'Pts';
+  document.getElementById('leftSideName').textContent = state.leftName;
+  document.getElementById('rightSideName').textContent = state.rightName;
+  document.getElementById('leftPartyPanelTitle').textContent = state.leftName.toUpperCase() + ' PARTIES';
+  document.getElementById('rightPartyPanelTitle').textContent = state.rightName.toUpperCase() + ' PARTIES';
+  document.getElementById('titleDisplay').textContent = state.title;
+}
+
+// ─────────────────────────────────────────────
+//  EVENTS
+// ─────────────────────────────────────────────
+function addEvent(side) {
+  const nameEl = document.getElementById(side + 'EventName');
+  const ptsEl  = document.getElementById(side + 'EventPts');
+  const partyEl = document.getElementById(side + 'EventParty');
+  const name = nameEl.value.trim();
+  const pts  = parseFloat(ptsEl.value) || 0;
+  if (!name) { notify('Enter an event name'); return; }
+  const event = {
+    id: Date.now() + Math.random(),
+    name,
+    pts,
+    party: partyEl.value,
+    date: new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'})
+  };
+  state[side + 'Events'].push(event);
+  nameEl.value = '';
+  ptsEl.value = '';
+  partyEl.value = '';
+  renderEvents(side);
+  updateBar();
+}
+
+function deleteEvent(side, id) {
+  state[side + 'Events'] = state[side + 'Events'].filter(e => e.id !== id);
+  renderEvents(side);
+  updateBar();
+}
+
+function renderEvents(side) {
+  const list = document.getElementById(side + 'EventsList');
+  const events = state[side + 'Events'];
+  const total = events.reduce((s,e) => s + e.pts, 0);
+  document.getElementById(side + 'SideTotal').textContent = total + ' ' + state.ptsLabel;
+
+  if (!events.length) {
+    list.innerHTML = '<div class="empty-state">No events yet — add one below</div>';
+    return;
+  }
+  list.innerHTML = events.map(e => {
+    const party = state[side + 'Parties'].find(p => p.name === e.party);
+    const dot = party ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${party.color};margin-right:3px;flex-shrink:0"></span>` : '';
+    return `<div class="event-row">
+      <div class="event-name-wrap">
+        <div class="event-icon">⚔</div>
+        <span class="event-name" title="${e.name}">${e.name}</span>
+      </div>
+      <div class="event-pts">${e.pts}</div>
+      <div class="event-party">${dot}${e.party || '—'}</div>
+      <div class="event-date">${e.date}</div>
+      <div class="event-del" onclick="deleteEvent('${side}', ${e.id})">✕</div>
+    </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────
+//  PARTIES
+// ─────────────────────────────────────────────
+function addParty(side) {
+  const input = document.getElementById(side + 'PartyInput');
+  const name = input.value.trim();
+  if (!name) { notify('Enter a party name'); return; }
+  if (state[side + 'Parties'].find(p => p.name === name)) { notify('Party already exists'); return; }
+  const color = PARTY_COLORS[state[side + 'Parties'].length % PARTY_COLORS.length];
+  state[side + 'Parties'].push({ name, color });
+  input.value = '';
+  renderParties(side);
+  updatePartySelects();
+}
+
+function deleteParty(side, name) {
+  state[side + 'Parties'] = state[side + 'Parties'].filter(p => p.name !== name);
+  renderParties(side);
+  updatePartySelects();
+}
+
+function renderParties(side) {
+  const list = document.getElementById(side + 'PartyList');
+  const parties = state[side + 'Parties'];
+  if (!parties.length) {
+    list.innerHTML = '<div class="empty-state">No parties yet</div>';
+    return;
+  }
+  list.innerHTML = parties.map(p => {
+    const pts = state[side + 'Events']
+      .filter(e => e.party === p.name)
+      .reduce((s,e) => s + e.pts, 0);
+    return `<div class="party-item">
+      <div class="party-dot" style="background:${p.color}"></div>
+      <span class="party-name">${p.name}</span>
+      <span class="party-pts-badge">${pts} pts</span>
+      <span class="party-del" onclick="deleteParty('${side}','${p.name}')">✕</span>
+    </div>`;
+  }).join('');
+}
+
+function updatePartySelects() {
+  ['left','right'].forEach(side => {
+    const sel = document.getElementById(side + 'EventParty');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— Party —</option>';
+    state[side + 'Parties'].forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.name;
+      opt.textContent = p.name;
+      sel.appendChild(opt);
+    });
+    if (cur) sel.value = cur;
+  });
+}
+
+// ─────────────────────────────────────────────
+//  BAR
+// ─────────────────────────────────────────────
+function updateBar() {
+  const leftPts  = state.leftEvents.reduce((s,e)=>s+e.pts,0);
+  const rightPts = state.rightEvents.reduce((s,e)=>s+e.pts,0);
+  const total = leftPts + rightPts;
+  let leftPct = 50, rightPct = 50;
+  if (total > 0) {
+    leftPct  = Math.round((leftPts / total) * 100);
+    rightPct = 100 - leftPct;
+  }
+  document.getElementById('barLeft').style.width  = leftPct + '%';
+  document.getElementById('barRight').style.width = rightPct + '%';
+
+  document.getElementById('leftPtsDisplay').textContent  = leftPts;
+  document.getElementById('rightPtsDisplay').textContent = rightPts;
+
+  // losses = difference
+  const diff = leftPts - rightPts;
+  document.getElementById('leftLossDisplay').textContent  = diff > 0 ? '+' + diff : diff;
+  document.getElementById('rightLossDisplay').textContent = diff < 0 ? '+' + Math.abs(diff) : -diff;
+}
+
+// ─────────────────────────────────────────────
+//  CUSTOMIZATION
+// ─────────────────────────────────────────────
+function promptTitle() {
+  const v = prompt('Enter war name:', state.title);
+  if (v !== null && v.trim()) {
+    state.title = v.trim();
+    updateLabels();
+    document.getElementById('customTitle').value = state.title;
+  }
+}
+function applyTitle() {
+  const v = document.getElementById('customTitle').value.trim();
+  if (v) { state.title = v; updateLabels(); notify('Title updated'); }
+}
+function applySideNames() {
+  const l = document.getElementById('customLeftName').value.trim();
+  const r = document.getElementById('customRightName').value.trim();
+  if (l) state.leftName = l;
+  if (r) state.rightName = r;
+  updateLabels();
+  renderAll();
+  notify('Side names updated');
+}
+function applyPtsLabel() {
+  const v = document.getElementById('customPtsLabel').value.trim();
+  if (v) { state.ptsLabel = v; renderAll(); notify('Points label updated'); }
+}
+function applyLossLabel() {
+  const v = document.getElementById('customLossLabel').value.trim();
+  if (v) { state.lossLabel = v; updateLabels(); notify('Losses label updated'); }
+}
+
+// ─────────────────────────────────────────────
+//  CODE EXPORT / IMPORT
+// ─────────────────────────────────────────────
+function generateCode() {
+  const json = JSON.stringify(state);
+  const encoded = btoa(encodeURIComponent(json));
+  document.getElementById('codeOutput').textContent = encoded;
+}
+
+function copyCode() {
+  const txt = document.getElementById('codeOutput').textContent;
+  if (txt.startsWith('[')) { notify('Generate a code first'); return; }
+  navigator.clipboard.writeText(txt).then(() => notify('Copied to clipboard!'));
+}
+
+function importCode() {
+  const raw = document.getElementById('importInput').value.trim();
+  if (!raw) { notify('Paste a code first'); return; }
+  try {
+    const json = decodeURIComponent(atob(raw));
+    const imported = JSON.parse(json);
+    Object.assign(state, imported);
+    document.getElementById('importInput').value = '';
+    document.getElementById('customTitle').value = state.title;
+    document.getElementById('customLeftName').value = state.leftName;
+    document.getElementById('customRightName').value = state.rightName;
+    document.getElementById('customPtsLabel').value = state.ptsLabel;
+    document.getElementById('customLossLabel').value = state.lossLabel;
+    renderAll();
+    notify('State imported successfully!');
+  } catch(e) {
+    notify('Invalid code — check and try again');
+  }
+}
+
+// ─────────────────────────────────────────────
+//  NOTIFICATION
+// ─────────────────────────────────────────────
+let notifTimer;
+function notify(msg) {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(notifTimer);
+  notifTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ─────────────────────────────────────────────
+//  KICK OFF
+// ─────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
